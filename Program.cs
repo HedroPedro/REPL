@@ -8,21 +8,17 @@ namespace Repl
         static void Main(string[] args)
         {
             Parser parser = new Parser();
-            while (true)
-            {
-              
-                Console.WriteLine(parser.E());
-            }
+            Console.WriteLine(parser.E());
         }
     }
 
     internal class Parser
     {
-        private string? input;
         private int lookahead;
         private int line;
         public Parser() {
             line = 0;
+            FindNonBlankChar();
         }
         private void FindNonBlankChar()
         {
@@ -30,12 +26,6 @@ namespace Repl
             while (lookahead == ' ' || lookahead == '\t')
             {
                 lookahead = Console.Read();
-            }
-        }
-
-        public void Parse(string input) {
-            if (string.IsNullOrEmpty(input)) {
-                return;
             }
         }
 
