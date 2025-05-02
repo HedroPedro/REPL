@@ -7,22 +7,21 @@ using System.Threading.Tasks;
 
 namespace Repl
 {
-    public class Token
+    internal class Token(int tag)
     {
-        private int tag;
-
-        public Token(int tag)
-        {
-            this.tag = tag;
-        }
+        public readonly int tag = tag;
     }
 
-    public class Num : Token {
-        public Num() : base(Tag.NUM) {}
+    internal class Num(int number) : Token(Tag.NUM) {
+        public readonly int number = number;
     }
 
-    public class Tag {
-        public static int NUM = 512;
-        public static int WORD = 533;
+    internal class Word(int t, string lexema) : Token(t) {
+        public readonly string lexema = new(lexema);
+    }
+
+    internal class Tag {
+        public const int NUM = 256;
+        public const int ID = 257;
     }
 }
