@@ -2,6 +2,7 @@
 using System.Diagnostics.Tracing;
 using System.Linq.Expressions;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Repl
 {
@@ -78,23 +79,24 @@ namespace Repl
                         Console.WriteLine(R(I(lexema)));
                         return;
                         }
-
-                    break;
+                    return;
                 case Tag.NUM:
                     var number = token is Num num ? num.number : throw new Exception("Syntax error");
                     Match(Tag.NUM);
                     Console.WriteLine(R(number));
-                    break;
+                    return;
                 case -1:
-                    break;
-                default:
+                    return;
+                case '(':
                     Console.WriteLine(E());
-                    break;
+                    return;
             }
+
+            throw new Exception("Syntax error");
         }
 
         public int I(string lexema) {
-            return (int)(Env.Get(lexema) ?? throw new Exception("Syntax Error")).Value;
+            return (int)(Env.Get(lexema) ?? throw new Exception("Variable " + lexema + " not found")).Value;
         }
 
         private int E()
@@ -104,44 +106,23 @@ namespace Repl
 
         private int R(int number)
         {
-            switch (token.tag) {
+            switch(token.tag)
+            {
                 case '+':
                     Match('+');
                     return number + F();
                 case '-':
                     Match('-');
                     return number - F();
+                case -1:
+                    return number;
                 default:
                     return F(number);
             }
         }
-
-        private int F(int number)
-        {
-            switch (token.tag)
-            {
-                case '*':
-                    Match('*');
-                    return number * V();
-                case '/':
-                    Match('/');
-                    return number / V();
-                case '(':
-                    Match('(');
-                    var expr_val = R(number);
-                    Match(')');
-                    return expr_val;
-                case -1:
-                case ')':
-                    return number;
-                default:
-                    return V();
-            }
-        }
-
         private int F()
         {
-            switch(token.tag)
+            switch (token.tag)
             {
                 case '*':
                     Match('*');
@@ -149,6 +130,24 @@ namespace Repl
                 case '/':
                     Match('/');
                     return V() / V();
+                default:
+                    return V();
+            }
+        }
+
+        private int F(int number) 
+        {
+            switch(token.tag) 
+            {
+                case '*':
+                    Match('*');
+                    return number * V();
+                case '/':
+                    Match('/');
+                    return number / V();
+                case ')':
+                    Match(')');
+                    return number;
                 default:
                     return V();
             }
@@ -167,11 +166,9 @@ namespace Repl
                     return R(I(lexema));
                 case '(':
                     Match('(');
-                    var expr_val = E();
-                    Match(')');
-                    return expr_val;
+                    return R(V());
                 default:
-                    return E();
+                    return R(V());
             }
         }
 
@@ -227,7 +224,7 @@ namespace Repl
                     pos++;
                 } while (pos != line.Length && char.IsLetter(line[pos]));
 
-                String s = b.ToString();
+                string s = b.ToString();
                 Word w = (Word)tokens[s];
                 if (w != null) {
                     return w;
