@@ -18,12 +18,14 @@ namespace Repl
                     var str = Console.ReadLine();
                     Console.ForegroundColor = ConsoleColor.DarkMagenta;
                     parser.Parse(str);
+                    parser.ResetLexer();
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
                 catch (Exception e)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(e.Message);      
+                    Console.WriteLine(e.Message);
+                    parser.ResetLexer();
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
             } while (true);
@@ -55,34 +57,28 @@ namespace Repl
             token = Lexer.Scan();
         }
 
-        public void S() 
+        public void S()
         {
             switch (token.tag)
             {
                 case Tag.ID:
-                    /*if (token is Word word)
+                    string lexema = token is Word word ? word.lexema : throw new Exception("Syntax error");    
+                    Match(Tag.ID);
+                    switch (token.tag)
                     {
-                        Match(Tag.ID);
-                        switch (token.tag)
-                        {
-                            case '=':
-                                Match('=');
-                                int valor = E();
-                                Env.Put(word.lexema, new Symbol(Tag.NUM, valor));
-                                break;
-                            case -1:
-                                Console.WriteLine(I(word.lexema).Value);
-                                return;
-                            default:
-                                Console.WriteLine(E());
-                                return;
+                        case '=':
+                        Match('=');
+                        int valor = E();
+                        Env.Put(word.lexema, new Symbol(Tag.NUM, valor));
+                        break;
+                        case -1:
+                        Console.WriteLine(I(lexema));
+                        return;
+                        default:
+                        Console.WriteLine(R(I(lexema)));
+                        return;
                         }
-                    } else
-                    {
-                        throw new Exception("Invalid token");
-                    }
-                        break;*/
-                    
+
                     break;
                 case Tag.NUM:
                     var number = token is Num num ? num.number : throw new Exception("Syntax error");
@@ -96,44 +92,85 @@ namespace Repl
             }
         }
 
-        private Symbol I(String lexema)
-        {
-            return Env.Get(lexema) ?? throw new Exception("Variable "+ lexema +  "not found");
+        public int I(string lexema) {
+            return (int)(Env.Get(lexema) ?? throw new Exception("Syntax Error")).Value;
         }
 
-        private int E() {
-            switch (token.tag) 
-            {
+        private int R(int number)
+        {
+            switch (token.tag) {
                 case '+':
-                    return V() + F();
+                    Match('+');
+                    return number + F();
                 case '-':
-                    return V() - F();
+                    Match('-');
+                    return number - F();
                 default:
-                    F();
+                    return F(number);
             }
         }
 
-        private int V()
+        private int F(int number)
         {
-            switch(token.tag) { 
-                case Tag.ID:
-                    var lexema = token is Word word ? word.lexema : throw new Exception("Not a var");
-                    Match(Tag.ID);
-                    return (int)I(lexema).Value;
-                case Tag.NUM:
-                    var number = token is Num num ? num.number : throw new Exception("Not a number");
-                    Match(Tag.NUM);
+            switch (token.tag)
+            {
+                case '*':
+                    Match('*');
+                    return number * V();
+                case '/':
+                    Match('/');
+                    return number / V();
+                case -1:
                     return number;
+                default:
+                    return V();
+            }
+        }
+
+        private int F()
+        {
+            switch(token.tag)
+            {
+                case '*':
+                    Match('*');
+                    return V() * V();
+                case '/':
+                    Match('/');
+                    return V() / V();
+                default:
+                    return V();
+            }
+        }
+
+        private int E() 
+        {
+            return R(V());
+        }
+
+        private int V() { 
+            switch(token.tag) 
+            {
+                case Tag.NUM:
+                    int number = token is Num num ? num.number : throw new Exception("Expetected number");
+                    Match(Tag.NUM);
+                    return R(number);
+                case Tag.ID:
+                    string lexema = token is Word word ? word.lexema : throw new Exception("Expected ID");
+                    Match(Tag.ID);
+                    return R(I(lexema));
                 case '(':
                     Match('(');
-                    var n = E();
+                    var expr_val = E();
                     Match(')');
-                    return n;
+                    return expr_val;
                 default:
-                    return E();
+                    throw new Exception("Syntax error");
             }
         }
 
+        public void ResetLexer() {
+            Lexer.setPos(0);
+        }
     }
     internal class Lexer 
     {
@@ -142,6 +179,7 @@ namespace Repl
         private int pos;
 
         public void SetLine(string line) { this.line = line; }
+        public void setPos(int pos) { this.pos = pos; }
         public Lexer() {
             tokens = [];
             pos = 0;
@@ -151,7 +189,6 @@ namespace Repl
         public void Reserve(Word token) {  tokens.Add(token.lexema, token); }
 
         public void Remove(Word token) {  tokens.Remove(token.lexema); }
-
         public Token Scan() {
             if (pos == line.Length)
             {
