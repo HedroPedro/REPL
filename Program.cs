@@ -88,12 +88,18 @@ namespace Repl
                 case -1:
                     break;
                 default:
-                    throw new Exception("Syntax error");
+                    Console.WriteLine(E());
+                    break;
             }
         }
 
         public int I(string lexema) {
             return (int)(Env.Get(lexema) ?? throw new Exception("Syntax Error")).Value;
+        }
+
+        private int E()
+        {
+            return R(V());
         }
 
         private int R(int number)
@@ -120,7 +126,13 @@ namespace Repl
                 case '/':
                     Match('/');
                     return number / V();
+                case '(':
+                    Match('(');
+                    var expr_val = R(number);
+                    Match(')');
+                    return expr_val;
                 case -1:
+                case ')':
                     return number;
                 default:
                     return V();
@@ -142,11 +154,6 @@ namespace Repl
             }
         }
 
-        private int E() 
-        {
-            return R(V());
-        }
-
         private int V() { 
             switch(token.tag) 
             {
@@ -164,7 +171,7 @@ namespace Repl
                     Match(')');
                     return expr_val;
                 default:
-                    throw new Exception("Syntax error");
+                    return E();
             }
         }
 
