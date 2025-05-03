@@ -126,10 +126,10 @@ namespace Repl
             {
                 case '*':
                     Match('*');
-                    return V() * V();
+                    return V() * F();
                 case '/':
                     Match('/');
-                    return V() / V();
+                    return V() / F();
                 default:
                     return V();
             }
@@ -145,12 +145,8 @@ namespace Repl
                 case '/':
                     Match('/');
                     return number / V();
-                case ')':
-                    Match(')');
-                    return number;
-                default:
-                    return V();
             }
+            throw new Exception("Syntax error");
         }
 
         private int V() { 
@@ -164,9 +160,6 @@ namespace Repl
                     string lexema = token is Word word ? word.lexema : throw new Exception("Expected ID");
                     Match(Tag.ID);
                     return R(I(lexema));
-                case '(':
-                    Match('(');
-                    return R(V());
                 default:
                     return R(V());
             }
@@ -200,9 +193,15 @@ namespace Repl
                 return new Token(-1);
             }
 
-            while (line[pos] == ' ' || line[pos] == '\t' || line[pos] == '\n' )
+            while (pos < line.Length && (line[pos] == ' ' || line[pos] == '\t' || line[pos] == '\n') )
             {
                 pos++;
+            }
+
+            if (pos == line.Length)
+            {
+                pos = 0;
+                return new Token(-1);
             }
 
             if (char.IsDigit(line[pos])) {
