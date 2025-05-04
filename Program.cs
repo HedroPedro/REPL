@@ -1,8 +1,5 @@
 ﻿using System.Collections;
-using System.Diagnostics.Tracing;
-using System.Linq.Expressions;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Repl
 {
@@ -19,14 +16,12 @@ namespace Repl
                     var str = Console.ReadLine();
                     Console.ForegroundColor = ConsoleColor.DarkMagenta;
                     parser.Parse(str);
-                    parser.ResetLexer();
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
                 catch (Exception e)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(e.Message);
-                    parser.ResetLexer();
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
             } while (true);
@@ -47,6 +42,7 @@ namespace Repl
 
         public void Parse(string str)
         {
+            Lexer.SetPos(0);
             Lexer.SetLine(str);
             token = Lexer.Scan();
             S();
@@ -87,12 +83,11 @@ namespace Repl
                     return;
                 case -1:
                     return;
-                case '(':
+                default:
                     Console.WriteLine(E());
                     return;
             }
 
-            throw new Exception("Syntax error");
         }
 
         public int I(string lexema) {
@@ -106,47 +101,32 @@ namespace Repl
 
         private int R(int number)
         {
-            switch(token.tag)
+            switch(token.tag) 
             {
                 case '+':
                     Match('+');
-                    return number + F();
+                    return number + E();
                 case '-':
                     Match('-');
-                    return number - F();
-                case -1:
-                    return number;
+                    return number - E();
                 default:
                     return F(number);
             }
         }
-        private int F()
-        {
-            switch (token.tag)
-            {
-                case '*':
-                    Match('*');
-                    return V() * F();
-                case '/':
-                    Match('/');
-                    return V() / F();
-                default:
-                    return V();
-            }
-        }
 
-        private int F(int number) 
+        private int F(int number)
         {
-            switch(token.tag) 
+            switch(token.tag)
             {
                 case '*':
                     Match('*');
-                    return number * V();
+                    return number * E();
                 case '/':
                     Match('/');
-                    return number / V();
+                    return number / E();
+                default:
+                    return number;
             }
-            throw new Exception("Syntax error");
         }
 
         private int V() { 
@@ -155,19 +135,20 @@ namespace Repl
                 case Tag.NUM:
                     int number = token is Num num ? num.number : throw new Exception("Expetected number");
                     Match(Tag.NUM);
-                    return R(number);
+                    return (number);
                 case Tag.ID:
                     string lexema = token is Word word ? word.lexema : throw new Exception("Expected ID");
                     Match(Tag.ID);
-                    return R(I(lexema));
-                default:
-                    return R(V());
+                    return I(lexema);
+                case '(':
+                    Match('(');
+                    var e = E();
+                    Match(')');
+                    return e;
             }
+            throw new Exception("Syntax error");
         }
 
-        public void ResetLexer() {
-            Lexer.setPos(0);
-        }
     }
     internal class Lexer 
     {
@@ -176,7 +157,7 @@ namespace Repl
         private int pos;
 
         public void SetLine(string line) { this.line = line; }
-        public void setPos(int pos) { this.pos = pos; }
+        public void SetPos(int pos) { this.pos = pos; }
         public Lexer() {
             tokens = [];
             pos = 0;
@@ -193,7 +174,7 @@ namespace Repl
                 return new Token(-1);
             }
 
-            while (pos < line.Length && (line[pos] == ' ' || line[pos] == '\t' || line[pos] == '\n') )
+            while (line[pos] == ' ' || line[pos] == '\t' || line[pos] == '\n' )
             {
                 pos++;
             }
