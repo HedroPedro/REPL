@@ -13,7 +13,7 @@ namespace Repl
             Console.WriteLine("| ___ \\ | ____| | |     | |          / _ \\");
             Console.WriteLine("||   || | |___  | |     | |         / / \\ \\");
             Console.WriteLine("||   || | ____| | |     | |        / /___\\ \\");
-            Console.WriteLine("||___|| | |___  | |___  | |___    / _______ \\");
+            Console.WriteLine("||___|| | |___  | |___  | |___    /  _____  \\");
             Console.WriteLine("|_____/ |_____| |_____| |_____|  /_/       \\_\\");
             Console.WriteLine();
 
