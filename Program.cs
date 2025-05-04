@@ -8,6 +8,15 @@ namespace Repl
         static void Main(string[] args)
         {
             Parser parser = new();
+
+            Console.WriteLine(" _____   _____   _       _            ___");
+            Console.WriteLine("| ___ \\ | ____| | |     | |          / _ \\");
+            Console.WriteLine("||   || | |___  | |     | |         / / \\ \\");
+            Console.WriteLine("||   || | ____| | |     | |        / /___\\ \\");
+            Console.WriteLine("||___|| | |___  | |___  | |___    / _______ \\");
+            Console.WriteLine("|_____/ |_____| |_____| |_____|  /_/       \\_\\");
+            Console.WriteLine();
+
             do
             {
                 Console.Write(">>> ");
